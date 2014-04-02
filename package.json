@@ -1,0 +1,27 @@
+{
+  "name": "miso",
+  "version": "0.1.1",
+  "description": "Batch processing for a function's arguments and return value",
+  "homepage": "http://ourai.github.io/miso/",
+  "keywords": [
+    "javascript",
+    "processor",
+    "batch"
+  ],
+  "author": "Ourai Lin <ourairyu@hotmail.com> (http://ourai.ws/)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ourai/miso.git"
+  },
+  "bugs": "https://github.com/ourai/miso/issues",
+  "engines": "node >= 0.8.0",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-coffee": "~0.10.0",
+    "grunt-contrib-uglify": "~0.4.0",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-copy": "~0.5.0",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-watch": "~0.6.0"
+  }
+}
