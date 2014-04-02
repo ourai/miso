@@ -8,7 +8,8 @@ module.exports = function( grunt ) {
       "grunt-contrib-coffee",
       "grunt-contrib-uglify",
       "grunt-contrib-concat",
-      "grunt-contrib-clean"
+      "grunt-contrib-clean",
+      "grunt-contrib-copy"
     ];
   var index = 0;
   var length = npmTasks.length;
@@ -18,7 +19,6 @@ module.exports = function( grunt ) {
     meta: {
       src: "src",
       coffee: "src/coffee",
-      js: "src/js",
       dest: "dest",
       build: "build",
       tests: "<%= meta.build %>/tests",
@@ -27,7 +27,10 @@ module.exports = function( grunt ) {
     concat: {
       coffee: {
         src: ["<%= meta.coffee %>/intro.coffee",
-              "<%= meta.coffee %>/core.coffee",
+              "<%= meta.coffee %>/variables.coffee",
+              "<%= meta.coffee %>/functions.coffee",
+              "<%= meta.coffee %>/builtin.coffee",
+              "<%= meta.coffee %>/constructor.coffee",
               "<%= meta.coffee %>/outro.coffee"],
         dest: "<%= meta.dest %>/<%= pkg.name %>.coffee"
       },
@@ -39,9 +42,9 @@ module.exports = function( grunt ) {
             });
           }
         },
-        src: ["<%= meta.js %>/intro.js",
-              "<%= meta.js %>/<%= pkg.name %>.js",
-              "<%= meta.js %>/outro.js"],
+        src: ["<%= meta.src %>/intro.js",
+              "<%= meta.src %>/<%= pkg.name %>.js",
+              "<%= meta.src %>/outro.js"],
         dest: "<%= meta.dest %>/<%= pkg.name %>.js"
       }
     },
@@ -52,7 +55,7 @@ module.exports = function( grunt ) {
       },
       build: {
         src: "<%= meta.dest %>/<%= pkg.name %>.coffee",
-        dest: "<%= meta.js %>/<%= pkg.name %>.js"
+        dest: "<%= meta.src %>/<%= pkg.name %>.js"
       }
     },
     uglify: {
@@ -66,19 +69,15 @@ module.exports = function( grunt ) {
     },
     clean: {
       compiled: {
-        src: ["dest/*.coffee",
-              "dest/*.scss",
-              "!dest/_helpers.scss"]
+        src: ["dest/*.coffee"]
       }
     },
-    watch: {
-      css: {
-        files: ["<%= meta.dest %>/**/*.scss"],
-        tasks: ["compass"]
-      },
-      html: {
-        files: ["src/layouts/**/*.jade"],
-        tasks: ["jade"]
+    copy: {
+      test: {
+        expand: true,
+        cwd: "<%= meta.dest %>",
+        src: ["**.js"],
+        dest: "<%= meta.tests %>"
       }
     }
   });
@@ -94,5 +93,5 @@ module.exports = function( grunt ) {
     "concat:js",
     "uglify"]);
   // Default task
-  grunt.registerTask("default", ["compile_coffee"]);
+  grunt.registerTask("default", ["compile_coffee", "clean", "copy"]);
 };
