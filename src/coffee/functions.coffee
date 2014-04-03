@@ -35,7 +35,7 @@ batch = ( host, handlers, data ) ->
 
   if _builtin.isArray(data)
     _builtin.each data, ( d ) ->
-      batch.apply context, [(if NAMESPACE_EXP.test(d[1]) then namespace(d[1]) else host), d[0]?.handlers, d[0]]
+      batch.apply context, [(if typeof d[1] is "string" and NAMESPACE_EXP.test(d[1]) then namespace(d[1]) else host), d[0]?.handlers, d[0]]
   else if _builtin.isObject(data)
     _builtin.each handlers, ( info ) ->
       attach.apply context, [host, info, data]

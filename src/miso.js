@@ -69,7 +69,7 @@ batch = function(host, handlers, data) {
   if (_builtin.isArray(data)) {
     _builtin.each(data, function(d) {
       var _ref;
-      return batch.apply(context, [(NAMESPACE_EXP.test(d[1]) ? namespace(d[1]) : host), (_ref = d[0]) != null ? _ref.handlers : void 0, d[0]]);
+      return batch.apply(context, [(typeof d[1] === "string" && NAMESPACE_EXP.test(d[1]) ? namespace(d[1]) : host), (_ref = d[0]) != null ? _ref.handlers : void 0, d[0]]);
     });
   } else if (_builtin.isObject(data)) {
     _builtin.each(handlers, function(info) {
