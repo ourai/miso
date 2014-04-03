@@ -16,14 +16,16 @@
 }(typeof window !== "undefined" ? window : this, function( window, noGlobal ) {
 
 "use strict";
-var BuiltIn, Constructor, LIB_CONFIG, NAMESPACE_EXP, attach, batch, builtin2core, namespace, settings, storage, toString, _H, _builtin;
+var BuiltIn, Constructor, LIB_CONFIG, NAMESPACE_EXP, attach, batch, hasOwn, namespace, settings, storage, toString, _H, _builtin;
 
 LIB_CONFIG = {
   name: "Miso",
   version: "0.1.1"
 };
 
-toString = Object.prototype.toString;
+toString = {}.toString;
+
+hasOwn = {}.hasOwnProperty;
 
 NAMESPACE_EXP = /^[0-9A-Z_.]+[^_.]?$/i;
 
@@ -75,20 +77,20 @@ namespace = function(ns_str) {
  * @param   host {Object}       the host of methods to be added
  * @param   handlers {Object}   data of a method
  * @param   data {Object}       data of a module
- * @param   isCore {Boolean}    whether copy to the core-method-object
  * @return
  */
 
-batch = function(host, handlers, data, isCore) {
+batch = function(host, handlers, data) {
   var context;
   context = this;
   if (_builtin.isArray(data)) {
     _builtin.each(data, function(d) {
-      return batch.apply(context, [(_builtin.isString(d[1]) && NAMESPACE_EXP.test(d[1]) ? namespace(d[1]) : host), d.handlers, d, isCore]);
+      var _ref;
+      return batch.apply(context, [(NAMESPACE_EXP.test(d[1]) ? namespace(d[1]) : host), (_ref = d[0]) != null ? _ref.handlers : void 0, d[0]]);
     });
   } else if (_builtin.isObject(data)) {
     _builtin.each(handlers, function(info) {
-      return attach.apply(context, [host, info, data, isCore]);
+      return attach.apply(context, [host, info, data]);
     });
   }
   return true;
@@ -107,13 +109,12 @@ batch = function(host, handlers, data, isCore) {
  * @return
  */
 
-attach = function(host, set, data, isCore) {
-  var handler, inst, method, name, validator, validators, value, _i, _len;
+attach = function(host, set, data) {
+  var handler, method, name, validator, validators, value, _i, _len;
   name = set.name;
-  inst = this;
   if (!_builtin.isFunction(host[name])) {
     handler = set.handler;
-    value = set.value === void 0 ? data.value : set.value;
+    value = hasOwn.call(set, "value") ? set.value : data.value;
     validators = [set.validator, data.validator, settings.validator, function() {}];
     for (_i = 0, _len = validators.length; _i < _len; _i++) {
       validator = validators[_i];
@@ -122,19 +123,13 @@ attach = function(host, set, data, isCore) {
       }
     }
     method = function() {
-      if (validator.apply(inst, arguments) === true && _builtin.isFunction(handler)) {
-        return handler.apply(inst, arguments);
+      if (_builtin.isFunction(handler) === true && validator.apply(host, arguments)) {
+        return handler.apply(host, arguments);
       } else {
         return value;
       }
     };
     host[name] = method;
-    if (isCore === true) {
-      storage.core[name] = method;
-      _builtin.mixin(inst, storage.core);
-    } else {
-      _builtin.mixin(inst, host);
-    }
   }
   return true;
 };
@@ -234,29 +229,17 @@ BuiltIn = (function() {
 
 _builtin = new BuiltIn;
 
-builtin2core = function() {
-  var name;
-  for (name in _builtin) {
-    storage.core[name] = _builtin[name];
-  }
-  return storage.modules.Core.BuiltIn = _builtin;
-};
-
 _builtin.each("Boolean Number String Function Array Date RegExp Object".split(" "), function(name, i) {
   var lc;
-  lc = name.toLowerCase();
-  storage.types["[object " + name + "]"] = lc;
-  name = "is" + name;
-  return _builtin[name] = function(obj) {
-    return this.type(obj) === lc;
+  storage.types["[object " + name + "]"] = lc = name.toLowerCase();
+  return _builtin["is" + name] = function(target) {
+    return this.type(target) === lc;
   };
 });
 
-builtin2core();
-
 
 /*
- * A constructor to batch constructing methods
+ * A constructor to construct methods
  *
  * @class   Constructor
  * @constructor
@@ -264,16 +247,11 @@ builtin2core();
 
 Constructor = (function() {
   function Constructor() {
-    var args, data, isCore, module;
+    var data;
     this.constructor = Constructor;
-    args = arguments;
-    data = args[0];
-    module = args[1];
-    isCore = args[2];
-    if (args.length === 2) {
-      isCore = module;
-    }
-    batch.apply(this, [namespace(module), data.handlers, data, isCore === true]);
+    this.object = {};
+    data = arguments[0];
+    batch.apply(this, [this.object, data != null ? data.handlers : void 0, data]);
   }
 
   Constructor.prototype.toString = function() {
@@ -289,10 +267,10 @@ Constructor = (function() {
 })();
 
 _builtin.mixin(Constructor, {
+  __builtIn__: _builtin,
   toString: function() {
     return "function " + LIB_CONFIG.name + "() { [native code] }";
   },
-  modules: storage.modules,
   config: function(setting) {
     return _builtin.mixin(settings, setting);
   }

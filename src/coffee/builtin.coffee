@@ -69,21 +69,11 @@ class BuiltIn
 
 _builtin = new BuiltIn
 
-builtin2core = ->
-  storage.core[name] = _builtin[name] for name of _builtin
-  storage.modules.Core.BuiltIn = _builtin
-
 # Fill the map object-types, and add methods to detect object-type.
 _builtin.each "Boolean Number String Function Array Date RegExp Object".split(" "), ( name, i ) ->
-  lc = name.toLowerCase()
-
   # populate the storage.types map
-  storage.types["[object #{name}]"] = lc
+  storage.types["[object #{name}]"] = lc = name.toLowerCase()
 
   # add methods such as isNumber/isBoolean/...
-  name = "is#{name}"
-
-  _builtin[name] = ( obj ) ->
-    return @type(obj) is lc
-
-builtin2core()
+  _builtin["is#{name}"] = ( target ) ->
+    return @type(target) is lc
