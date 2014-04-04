@@ -10,7 +10,7 @@
 # @return   {Boolean}
 ###
 hasOwnProp = ( obj, prop ) ->
-  return Object.prototype.hasOwnProperty.call obj, prop
+  return if not obj? then false else Object.prototype.hasOwnProperty.call obj, prop
 
 ###
 # 添加命名空间

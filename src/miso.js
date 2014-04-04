@@ -38,7 +38,11 @@ storage = {
  */
 
 hasOwnProp = function(obj, prop) {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
+  if (obj == null) {
+    return false;
+  } else {
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+  }
 };
 
 
