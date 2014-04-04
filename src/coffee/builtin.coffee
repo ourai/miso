@@ -76,7 +76,7 @@ class BuiltIn
   # @return
   ###
   slice: ( args, index ) ->
-    return [].slice.call args, (Number(index) || 0)
+    return if not args? then [] else [].slice.call args, (Number(index) || 0)
 
   ###
   # 判断某个对象是否有自己的指定属性

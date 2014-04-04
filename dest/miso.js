@@ -249,7 +249,11 @@ BuiltIn = (function() {
    */
 
   BuiltIn.prototype.slice = function(args, index) {
-    return [].slice.call(args, Number(index) || 0);
+    if (args == null) {
+      return [];
+    } else {
+      return [].slice.call(args, Number(index) || 0);
+    }
   };
 
 
