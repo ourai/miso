@@ -1,4 +1,18 @@
 ###
+# 判断某个对象是否有自己的指定属性
+#
+# !!! 不能用 object.hasOwnProperty(prop) 这种方式，低版本 IE 不支持。
+#
+# @private
+# @method   hasOwnProp
+# @param    obj {Object}    Target object
+# @param    prop {String}   Property to be tested
+# @return   {Boolean}
+###
+hasOwnProp = ( obj, prop ) ->
+  return Object.prototype.hasOwnProperty.call obj, prop
+
+###
 # 添加命名空间
 #
 # @private
@@ -58,7 +72,7 @@ attach = ( host, set, data ) ->
 
   if not _builtin.isFunction host[name]
     handler = set.handler
-    value = if hasOwn.call(set, "value") then set.value else data.value
+    value = if hasOwnProp(set, "value") then set.value else data.value
     validators = [set.validator, data.validator, settings.validator, ->]
 
     break for validator in validators when _builtin.isFunction validator

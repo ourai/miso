@@ -1,5 +1,5 @@
 "use strict";
-var BuiltIn, Constructor, LIB_CONFIG, NAMESPACE_EXP, attach, batch, hasOwn, namespace, settings, storage, toString, _H, _builtin;
+var BuiltIn, Constructor, LIB_CONFIG, NAMESPACE_EXP, attach, batch, hasOwnProp, namespace, settings, storage, toString, _H, _builtin;
 
 LIB_CONFIG = {
   name: "@NAME",
@@ -7,8 +7,6 @@ LIB_CONFIG = {
 };
 
 toString = {}.toString;
-
-hasOwn = {}.hasOwnProperty;
 
 NAMESPACE_EXP = /^[0-9A-Z_.]+[^_.]?$/i;
 
@@ -24,6 +22,23 @@ storage = {
       BuiltIn: null
     }
   }
+};
+
+
+/*
+ * 判断某个对象是否有自己的指定属性
+ *
+ * !!! 不能用 object.hasOwnProperty(prop) 这种方式，低版本 IE 不支持。
+ *
+ * @private
+ * @method   hasOwnProp
+ * @param    obj {Object}    Target object
+ * @param    prop {String}   Property to be tested
+ * @return   {Boolean}
+ */
+
+hasOwnProp = function(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
 };
 
 
@@ -97,7 +112,7 @@ attach = function(host, set, data) {
   name = set.name;
   if (!_builtin.isFunction(host[name])) {
     handler = set.handler;
-    value = hasOwn.call(set, "value") ? set.value : data.value;
+    value = hasOwnProp(set, "value") ? set.value : data.value;
     validators = [set.validator, data.validator, settings.validator, function() {}];
     for (_i = 0, _len = validators.length; _i < _len; _i++) {
       validator = validators[_i];
@@ -204,6 +219,32 @@ BuiltIn = (function() {
     } else {
       return storage.types[toString.call(object)] || "object";
     }
+  };
+
+
+  /*
+   * 切割 Array-Like Object 片段
+   *
+   * @method   slice
+   * @param    args {Array-Like}
+   * @param    index {Integer}
+   * @return
+   */
+
+  BuiltIn.prototype.slice = function(args, index) {
+    return [].slice.call(args, Number(index) || 0);
+  };
+
+
+  /*
+   * 判断某个对象是否有自己的指定属性
+   *
+   * @method   hasProp
+   * @return   {Boolean}
+   */
+
+  BuiltIn.prototype.hasProp = function() {
+    return hasOwnProp.apply(this, this.slice(arguments));
   };
 
   return BuiltIn;

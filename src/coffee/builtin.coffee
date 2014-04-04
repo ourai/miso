@@ -67,6 +67,26 @@ class BuiltIn
   type: ( object ) ->
     return if not object? then String(object) else storage.types[toString.call(object)] || "object"
 
+  ###
+  # 切割 Array-Like Object 片段
+  #
+  # @method   slice
+  # @param    args {Array-Like}
+  # @param    index {Integer}
+  # @return
+  ###
+  slice: ( args, index ) ->
+    return [].slice.call args, (Number(index) || 0)
+
+  ###
+  # 判断某个对象是否有自己的指定属性
+  #
+  # @method   hasProp
+  # @return   {Boolean}
+  ###
+  hasProp: ->
+    return hasOwnProp.apply this, @slice arguments
+
 _builtin = new BuiltIn
 
 # Fill the map object-types, and add methods to detect object-type.
