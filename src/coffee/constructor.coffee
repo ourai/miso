@@ -9,11 +9,15 @@ class Constructor
     @constructor = Constructor
     @object = {}
 
+    args = arguments
     # data of module's methods
-    data = arguments[0]
+    data = args[0]
+    host = args[1]
+
+    host = @object if args.length < 2 or not (typeof host in ["object", "function"])
 
     # Batch adding methods
-    batch.apply this, [@object, data?.handlers, data]
+    batch.apply this, [host, data?.handlers, data]
 
   toString: ->
     return "[object #{LIB_CONFIG.name}]"
