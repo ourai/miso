@@ -97,3 +97,120 @@ _builtin.each "Boolean Number String Function Array Date RegExp Object".split(" 
   # add methods such as isNumber/isBoolean/...
   _builtin["is#{name}"] = ( target ) ->
     return @type(target) is lc
+
+# Extension of detecting type of variables
+_builtin.mixin
+  ###
+  # 判断是否为 window 对象
+  # 
+  # @method  isWindow
+  # @param   object {Mixed}
+  # @return  {String}
+  ###
+  isWindow: ( object ) ->
+    return object and @type(object) is "object" and "setInterval" of object
+
+  ###
+  # 判断是否为数字类型（字符串）
+  # 
+  # @method  isNumeric
+  # @param   object {Mixed}
+  # @return  {Boolean}
+  ###
+  isNumeric: ( object ) ->
+    return not isNaN(parseFloat(object)) and isFinite(object)
+
+  ###
+  # Determine whether a number is an integer.
+  #
+  # @method  isInteger
+  # @param   object {Mixed}
+  # @return  {Boolean}
+  ###
+  isInteger: ( object ) ->
+    return @isNumeric(object) and /^-?[1-9]\d*$/.test(object)
+
+  ###
+  # 判断对象是否为纯粹的对象（由 {} 或 new Object 创建）
+  # 
+  # @method  isPlainObject
+  # @param   object {Mixed}
+  # @return  {Boolean}
+  ###
+  isPlainObject: ( object ) ->
+    # This is a copy of jQuery 1.7.1.
+    
+    # Must be an Object.
+    # Because of IE, we also have to check the presence of the constructor property.
+    # Make sure that DOM nodes and window objects don't pass through, as well
+    if not object or @type(object) isnt "object" or object.nodeType or @isWindow(object)
+      return false
+
+    try
+      # Not own constructor property must be Object
+      if object.constructor and not @hasProp(object, "constructor") and not @hasProp(object.constructor.prototype, "isPrototypeOf")
+        return false
+    catch error
+        # IE8,9 will throw exceptions on certain host objects
+        return false
+
+    key for key of object
+
+    return key is undefined or @hasProp(object, key)
+
+  ###
+  # Determin whether a variable is considered to be empty.
+  #
+  # A variable is considered empty if its value is or like:
+  #  - null
+  #  - undefined
+  #  - false
+  #  - ""
+  #  - []
+  #  - {}
+  #  - 0
+  #  - 0.0
+  #  - "0"
+  #  - "0.0"
+  #
+  # @method  isEmpty
+  # @param   object {Mixed}
+  # @return  {Boolean}
+  #
+  # refer: http://www.php.net/manual/en/function.empty.php
+  ###
+  isEmpty: ( object ) ->
+    result = false
+
+    if not object? or not object
+      result = true
+    else if @type(object) is "object"
+      result = true
+
+      for name of object
+        result = false
+        break
+
+    return result
+
+  ###
+  # 是否为类数组对象
+  #
+  # @method  isArrayLike
+  # @param   object {Mixed}
+  # @return  {Boolean}
+  ###
+  isArrayLike: ( object ) ->
+    result = false
+
+    if @type(object) is "object" and object isnt null
+      if not @isWindow object
+        type = @type object
+        length = object.length
+
+        result = true if object.nodeType is 1 and length or
+          type is "array" or
+          type isnt "function" and
+          (length is 0 or @isNumber(length) and length > 0 and (length - 1) of object)
+
+    return result
