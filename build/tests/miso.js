@@ -286,6 +286,126 @@ _builtin.each("Boolean Number String Function Array Date RegExp Object".split(" 
   };
 });
 
+_builtin.mixin({
+
+  /*
+   * 判断是否为 window 对象
+   * 
+   * @method  isWindow
+   * @param   object {Mixed}
+   * @return  {String}
+   */
+  isWindow: function(object) {
+    return object && this.type(object) === "object" && "setInterval" in object;
+  },
+
+  /*
+   * 判断是否为数字类型（字符串）
+   * 
+   * @method  isNumeric
+   * @param   object {Mixed}
+   * @return  {Boolean}
+   */
+  isNumeric: function(object) {
+    return !isNaN(parseFloat(object)) && isFinite(object);
+  },
+
+  /*
+   * Determine whether a number is an integer.
+   *
+   * @method  isInteger
+   * @param   object {Mixed}
+   * @return  {Boolean}
+   */
+  isInteger: function(object) {
+    return this.isNumeric(object) && /^-?[1-9]\d*$/.test(object);
+  },
+
+  /*
+   * 判断对象是否为纯粹的对象（由 {} 或 new Object 创建）
+   * 
+   * @method  isPlainObject
+   * @param   object {Mixed}
+   * @return  {Boolean}
+   */
+  isPlainObject: function(object) {
+    var error, key;
+    if (!object || this.type(object) !== "object" || object.nodeType || this.isWindow(object)) {
+      return false;
+    }
+    try {
+      if (object.constructor && !this.hasProp(object, "constructor") && !this.hasProp(object.constructor.prototype, "isPrototypeOf")) {
+        return false;
+      }
+    } catch (_error) {
+      error = _error;
+      return false;
+    }
+    for (key in object) {
+      key;
+    }
+    return key === void 0 || this.hasProp(object, key);
+  },
+
+  /*
+   * Determin whether a variable is considered to be empty.
+   *
+   * A variable is considered empty if its value is or like:
+   *  - null
+   *  - undefined
+   *  - false
+   *  - ""
+   *  - []
+   *  - {}
+   *  - 0
+   *  - 0.0
+   *  - "0"
+   *  - "0.0"
+   *
+   * @method  isEmpty
+   * @param   object {Mixed}
+   * @return  {Boolean}
+   *
+   * refer: http://www.php.net/manual/en/function.empty.php
+   */
+  isEmpty: function(object) {
+    var name, result;
+    result = false;
+    if ((object == null) || !object) {
+      result = true;
+    } else if (this.type(object) === "object") {
+      result = true;
+      for (name in object) {
+        result = false;
+        break;
+      }
+    }
+    return result;
+  },
+
+  /*
+   * 是否为类数组对象
+   *
+   * @method  isArrayLike
+   * @param   object {Mixed}
+   * @return  {Boolean}
+   */
+  isArrayLike: function(object) {
+    var length, result, type;
+    result = false;
+    if (this.type(object) === "object" && object !== null) {
+      if (!this.isWindow(object)) {
+        type = this.type(object);
+        length = object.length;
+        if (object.nodeType === 1 && length || type === "array" || type !== "function" && (length === 0 || this.isNumber(length) && length > 0 && (length - 1) in object)) {
+          result = true;
+        }
+      }
+    }
+    return result;
+  }
+});
+
 
 /*
  * A constructor to construct methods
