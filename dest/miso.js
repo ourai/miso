@@ -296,7 +296,7 @@ _builtin.mixin({
    * @return  {String}
    */
   isWindow: function(object) {
-    return object && this.type(object) === "object" && "setInterval" in object;
+    return object && this.isObject(object) && "setInterval" in object;
   },
 
   /*
@@ -330,7 +330,7 @@ _builtin.mixin({
    */
   isPlainObject: function(object) {
     var error, key;
-    if (!object || this.type(object) !== "object" || object.nodeType || this.isWindow(object)) {
+    if (!object || !this.isObject(object) || object.nodeType || this.isWindow(object)) {
       return false;
     }
     try {
@@ -373,7 +373,7 @@ _builtin.mixin({
     result = false;
     if ((object == null) || !object) {
       result = true;
-    } else if (this.type(object) === "object") {
+    } else if (this.isObject(object)) {
       result = true;
       for (name in object) {
         result = false;
@@ -393,11 +393,11 @@ _builtin.mixin({
   isArrayLike: function(object) {
     var length, result, type;
     result = false;
-    if (this.type(object) === "object" && object !== null) {
+    if (this.isObject(object) && object !== null) {
       if (!this.isWindow(object)) {
         type = this.type(object);
         length = object.length;
-        if (object.nodeType === 1 && length || type === "array" || type !== "function" && (length === 0 || this.isNumber(length) && length > 0 && (length - 1) in object)) {
+        if (object.nodeType === 1 && length || this.isArray(type) || !this.isFunction(type) && (length === 0 || this.isNumber(length) && length > 0 && (length - 1) in object)) {
           result = true;
         }
       }
@@ -416,14 +416,13 @@ _builtin.mixin({
 
 Constructor = (function() {
   function Constructor() {
-    var args, data, host, _ref;
+    var args, data, host;
     this.constructor = Constructor;
-    this.object = {};
     args = arguments;
     data = args[0];
     host = args[1];
-    if (args.length < 2 || !((_ref = typeof host) === "object" || _ref === "function")) {
-      host = this.object;
+    if (args.length < 2 || !(_builtin.isObject(host) || _builtin.isFunction(host))) {
+      host = this.object = {};
     }
     batch.apply(this, [host, data != null ? data.handlers : void 0, data]);
   }
