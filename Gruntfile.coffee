@@ -26,8 +26,7 @@ module.exports = ( grunt ) ->
             "<%= meta.coffee %>/intro.coffee"
             "<%= meta.coffee %>/variables.coffee"
             "<%= meta.coffee %>/functions.coffee"
-            "<%= meta.coffee %>/builtin.coffee"
-            "<%= meta.coffee %>/constructor.coffee"
+            "<%= meta.coffee %>/methods.coffee"
             "<%= meta.coffee %>/outro.coffee"
           ]
         dest: "<%= meta.dest %>/<%= pkg.name %>.coffee"

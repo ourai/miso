@@ -1,4 +1,8 @@
-class BuiltIn
+storage.methods =
+  # ====================
+  # Core methods
+  # ====================
+
   ###
   # 扩展指定对象
   # 
@@ -87,19 +91,10 @@ class BuiltIn
   hasProp: ->
     return hasOwnProp.apply this, @slice arguments
 
-_builtin = new BuiltIn
+  # ====================
+  # Extension of detecting type of variables
+  # ====================
 
-# Fill the map object-types, and add methods to detect object-type.
-_builtin.each "Boolean Number String Function Array Date RegExp Object".split(" "), ( name, i ) ->
-  # populate the storage.types map
-  storage.types["[object #{name}]"] = lc = name.toLowerCase()
-
-  # add methods such as isNumber/isBoolean/...
-  _builtin["is#{name}"] = ( target ) ->
-    return @type(target) is lc
-
-# Extension of detecting type of variables
-_builtin.mixin
   ###
   # 判断是否为 window 对象
   # 
@@ -214,3 +209,19 @@ _builtin.mixin
           (length is 0 or @isNumber(length) and length > 0 and (length - 1) of object)
 
     return result
+
+# Fill the map object-types, and add methods to detect object-type.
+storage.methods.each "Boolean Number String Function Array Date RegExp Object".split(" "), ( name ) ->
+  # populate the storage.types map
+  storage.types["[object #{name}]"] = lc = name.toLowerCase()
+
+  # add methods such as isNumber/isBoolean/...
+  storage.methods["is#{name}"] = ( target ) ->
+    return @type(target) is lc
+
+_H = ( data, host ) ->
+  return batch data?.handlers, data, host ? {}
+
+storage.methods.each storage.methods, ( handler, name )->
+  defineProp handler
+  _H[name] = handler

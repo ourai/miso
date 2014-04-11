@@ -1,5 +1,5 @@
 "use strict";
-var BuiltIn, Constructor, LIB_CONFIG, NAMESPACE_EXP, attach, batch, hasOwnProp, namespace, settings, storage, toString, _H, _builtin;
+var LIB_CONFIG, attach, batch, defineProp, hasOwnProp, settings, storage, toString, _H;
 
 LIB_CONFIG = {
   name: "@NAME",
@@ -8,20 +8,12 @@ LIB_CONFIG = {
 
 toString = {}.toString;
 
-NAMESPACE_EXP = /^[0-9A-Z_.]+[^_.]?$/i;
-
 settings = {
   validator: function() {}
 };
 
 storage = {
-  core: {},
-  types: {},
-  modules: {
-    Core: {
-      BuiltIn: null
-    }
-  }
+  types: {}
 };
 
 
@@ -47,27 +39,27 @@ hasOwnProp = function(obj, prop) {
 
 
 /*
- * 添加命名空间
+ * 为指定 object 或 function 定义属性
  *
  * @private
- * @method  namespace
- * @param   ns_str {String}     a namespace format string (e.g. 'Module.Package')
- * @return  {Object}
+ * @method   defineProp
+ * @param    target {Object}
+ * @return   {Boolean}
  */
 
-namespace = function(ns_str) {
-  var obj;
-  obj = null;
-  if (_builtin.isString(ns_str) && NAMESPACE_EXP.test(ns_str)) {
-    obj = storage.modules;
-    _builtin.each(ns_str.split("."), function(part, idx) {
-      if (obj[part] === void 0) {
-        obj[part] = {};
-      }
-      return obj = obj[part];
+defineProp = function(target) {
+  var prop, value;
+  prop = "__" + (LIB_CONFIG.name.toLowerCase()) + "__";
+  value = true;
+  if (hasOwnProp(Object, "defineProperty")) {
+    Object.defineProperty(target, prop, {
+      __proto__: null,
+      value: value
     });
+  } else {
+    target[prop] = value;
   }
-  return obj;
+  return true;
 };
 
 
@@ -76,26 +68,25 @@ namespace = function(ns_str) {
  *
  * @private
  * @method  batch
- * @param   host {Object}       the host of methods to be added
  * @param   handlers {Object}   data of a method
  * @param   data {Object}       data of a module
+ * @param   host {Object}       the host of methods to be added
  * @return
  */
 
-batch = function(host, handlers, data) {
-  var context;
-  context = this;
-  if (_builtin.isArray(data)) {
-    _builtin.each(data, function(d) {
-      var _ref;
-      return batch.apply(context, [(typeof d[1] === "string" && NAMESPACE_EXP.test(d[1]) ? namespace(d[1]) : host), (_ref = d[0]) != null ? _ref.handlers : void 0, d[0]]);
+batch = function(handlers, data, host) {
+  var methods;
+  methods = storage.methods;
+  if (methods.isArray(data)) {
+    methods.each(data, function(d) {
+      return batch(d != null ? d.handlers : void 0, d, host);
     });
-  } else if (_builtin.isObject(data)) {
-    _builtin.each(handlers, function(info) {
-      return attach.apply(context, [host, info, data]);
+  } else if (methods.isObject(data)) {
+    methods.each(handlers, function(info) {
+      return attach(info, data, host);
     });
   }
-  return true;
+  return host;
 };
 
 
@@ -104,28 +95,28 @@ batch = function(host, handlers, data) {
  *
  * @private
  * @method  attach
- * @param   host {Object}       the host of methods to be added
  * @param   set {Object}        data of a method
  * @param   data {Object}       data of a module
- * @param   isCore {Boolean}    whether copy to the core-method-object
+ * @param   host {Object}       the host of methods to be added
  * @return
  */
 
-attach = function(host, set, data) {
-  var handler, method, name, validator, validators, value, _i, _len;
+attach = function(set, data, host) {
+  var handler, method, methods, name, validator, validators, value, _i, _len;
   name = set.name;
-  if (!_builtin.isFunction(host[name])) {
+  methods = storage.methods;
+  if (!methods.isFunction(host[name])) {
     handler = set.handler;
     value = hasOwnProp(set, "value") ? set.value : data.value;
     validators = [set.validator, data.validator, settings.validator, function() {}];
     for (_i = 0, _len = validators.length; _i < _len; _i++) {
       validator = validators[_i];
-      if (_builtin.isFunction(validator)) {
+      if (methods.isFunction(validator)) {
         break;
       }
     }
     method = function() {
-      if (_builtin.isFunction(handler) === true && validator.apply(host, arguments)) {
+      if (methods.isFunction(handler) && validator.apply(host, arguments) === true) {
         return handler.apply(host, arguments);
       } else {
         return value;
@@ -133,12 +124,10 @@ attach = function(host, set, data) {
     };
     host[name] = method;
   }
-  return true;
+  return host;
 };
 
-BuiltIn = (function() {
-  function BuiltIn() {}
-
+storage.methods = {
 
   /*
    * 扩展指定对象
@@ -147,8 +136,7 @@ BuiltIn = (function() {
    * @param   unspecified {Mixed}
    * @return  {Object}
    */
-
-  BuiltIn.prototype.mixin = function() {
+  mixin: function() {
     var args, copy, i, length, name, opts, target, _ref;
     args = arguments;
     length = args.length;
@@ -174,8 +162,7 @@ BuiltIn = (function() {
       i++;
     }
     return target;
-  };
-
+  },
 
   /*
    * 遍历
@@ -185,8 +172,7 @@ BuiltIn = (function() {
    * @param   callback {Function}
    * @return  {Mixed}
    */
-
-  BuiltIn.prototype.each = function(object, callback) {
+  each: function(object, callback) {
     var ele, index, name, type, value;
     type = this.type(object);
     if (type === "object" || type === "function") {
@@ -206,8 +192,7 @@ BuiltIn = (function() {
       }
     }
     return object;
-  };
-
+  },
 
   /*
    * 获取对象类型
@@ -216,15 +201,13 @@ BuiltIn = (function() {
    * @param   object {Mixed}
    * @return  {String}
    */
-
-  BuiltIn.prototype.type = function(object) {
+  type: function(object) {
     if (object == null) {
       return String(object);
     } else {
       return storage.types[toString.call(object)] || "object";
     }
-  };
-
+  },
 
   /*
    * 切割 Array-Like Object 片段
@@ -234,15 +217,13 @@ BuiltIn = (function() {
    * @param    index {Integer}
    * @return
    */
-
-  BuiltIn.prototype.slice = function(args, index) {
+  slice: function(args, index) {
     if (args == null) {
       return [];
     } else {
       return [].slice.call(args, Number(index) || 0);
     }
-  };
-
+  },
 
   /*
    * 判断某个对象是否有自己的指定属性
@@ -250,26 +231,9 @@ BuiltIn = (function() {
    * @method   hasProp
    * @return   {Boolean}
    */
-
-  BuiltIn.prototype.hasProp = function() {
+  hasProp: function() {
     return hasOwnProp.apply(this, this.slice(arguments));
-  };
-
-  return BuiltIn;
-
-})();
-
-_builtin = new BuiltIn;
-
-_builtin.each("Boolean Number String Function Array Date RegExp Object".split(" "), function(name, i) {
-  var lc;
-  storage.types["[object " + name + "]"] = lc = name.toLowerCase();
-  return _builtin["is" + name] = function(target) {
-    return this.type(target) === lc;
-  };
-});
-
-_builtin.mixin({
+  },
 
   /*
    * 判断是否为 window 对象
@@ -387,51 +351,23 @@ _builtin.mixin({
     }
     return result;
   }
+};
+
+storage.methods.each("Boolean Number String Function Array Date RegExp Object".split(" "), function(name) {
+  var lc;
+  storage.types["[object " + name + "]"] = lc = name.toLowerCase();
+  return storage.methods["is" + name] = function(target) {
+    return this.type(target) === lc;
+  };
 });
 
+_H = function(data, host) {
+  return batch(data != null ? data.handlers : void 0, data, host != null ? host : {});
+};
 
-/*
- * A constructor to construct methods
- *
- * @class   Constructor
- * @constructor
- */
-
-Constructor = (function() {
-  function Constructor() {
-    var args, data, host;
-    this.constructor = Constructor;
-    args = arguments;
-    data = args[0];
-    host = args[1];
-    if (args.length < 2 || !(_builtin.isObject(host) || _builtin.isFunction(host))) {
-      host = this.object = {};
-    }
-    batch.apply(this, [host, data != null ? data.handlers : void 0, data]);
-  }
-
-  Constructor.prototype.toString = function() {
-    return "[object " + LIB_CONFIG.name + "]";
-  };
-
-  Constructor.prototype.add = function(set) {
-    return attach(set);
-  };
-
-  return Constructor;
-
-})();
-
-_builtin.mixin(Constructor, {
-  __builtIn__: _builtin,
-  toString: function() {
-    return "function " + LIB_CONFIG.name + "() { [native code] }";
-  },
-  config: function(setting) {
-    return _builtin.mixin(settings, setting);
-  }
+storage.methods.each(storage.methods, function(handler, name) {
+  defineProp(handler);
+  return _H[name] = handler;
 });
-
-_H = Constructor;
 
 window[LIB_CONFIG.name] = _H;

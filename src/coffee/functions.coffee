@@ -13,73 +13,72 @@ hasOwnProp = ( obj, prop ) ->
   return if not obj? then false else Object.prototype.hasOwnProperty.call obj, prop
 
 ###
-# 添加命名空间
+# 为指定 object 或 function 定义属性
 #
 # @private
-# @method  namespace
-# @param   ns_str {String}     a namespace format string (e.g. 'Module.Package')
-# @return  {Object}
+# @method   defineProp
+# @param    target {Object}
+# @return   {Boolean}
 ###
-namespace = ( ns_str ) ->
-  obj = null
+defineProp = ( target ) ->
+  prop = "__#{LIB_CONFIG.name.toLowerCase()}__"
+  value = true
 
-  # Generate an object when the host variable is a namespace string.
-  if _builtin.isString(ns_str) && NAMESPACE_EXP.test(ns_str)
-      obj = storage.modules
+  if hasOwnProp Object, "defineProperty"
+    Object.defineProperty target, prop,
+      __proto__: null
+      value: value
+  else
+    target[prop] = value
 
-      _builtin.each ns_str.split("."), ( part, idx ) ->
-        obj[part] = {} if obj[part] is undefined
-
-        obj = obj[part]
-
-  return obj
+  return true
 
 ###
 # 批量添加 method
 #
 # @private
 # @method  batch
-# @param   host {Object}       the host of methods to be added
 # @param   handlers {Object}   data of a method
 # @param   data {Object}       data of a module
+# @param   host {Object}       the host of methods to be added
 # @return
 ###
-batch = ( host, handlers, data ) ->
-  context = this
+batch = ( handlers, data, host ) ->
+  methods = storage.methods
 
-  if _builtin.isArray(data)
-    _builtin.each data, ( d ) ->
-      batch.apply context, [(if typeof d[1] is "string" and NAMESPACE_EXP.test(d[1]) then namespace(d[1]) else host), d[0]?.handlers, d[0]]
-  else if _builtin.isObject(data)
-    _builtin.each handlers, ( info ) ->
-      attach.apply context, [host, info, data]
+  if methods.isArray data
+    methods.each data, ( d ) ->
+      batch d?.handlers, d, host
+  else if methods.isObject data
+    methods.each handlers, ( info ) ->
+      attach info, data, host
 
-  return true
+  return host
 
 ###
 # 构造 method
 #
 # @private
 # @method  attach
-# @param   host {Object}       the host of methods to be added
 # @param   set {Object}        data of a method
 # @param   data {Object}       data of a module
-# @param   isCore {Boolean}    whether copy to the core-method-object
+# @param   host {Object}       the host of methods to be added
 # @return
 ###
-attach = ( host, set, data ) ->
+attach = ( set, data, host ) ->
   name = set.name
+  methods = storage.methods
 
-  if not _builtin.isFunction host[name]
+  if not methods.isFunction host[name]
     handler = set.handler
     value = if hasOwnProp(set, "value") then set.value else data.value
     validators = [set.validator, data.validator, settings.validator, ->]
 
-    break for validator in validators when _builtin.isFunction validator
+    break for validator in validators when methods.isFunction validator
 
     method = ->
-      return if _builtin.isFunction(handler) is true and validator.apply(host, arguments) then handler.apply(host, arguments) else value;
+      return if methods.isFunction(handler) and validator.apply(host, arguments) is true then handler.apply(host, arguments) else value;
     
     host[name] = method
 
-  return true
+  return host
