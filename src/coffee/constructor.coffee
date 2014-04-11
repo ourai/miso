@@ -7,14 +7,13 @@
 class Constructor
   constructor: ->
     @constructor = Constructor
-    @object = {}
 
     args = arguments
     # data of module's methods
     data = args[0]
     host = args[1]
 
-    host = @object if args.length < 2 or not (typeof host in ["object", "function"])
+    host = @object = {} if args.length < 2 or not (_builtin.isObject(host) or _builtin.isFunction(host))
 
     # Batch adding methods
     batch.apply this, [host, data?.handlers, data]

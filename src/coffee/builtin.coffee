@@ -108,7 +108,7 @@ _builtin.mixin
   # @return  {String}
   ###
   isWindow: ( object ) ->
-    return object and @type(object) is "object" and "setInterval" of object
+    return object and @isObject(object) and "setInterval" of object
 
   ###
   # 判断是否为数字类型（字符串）
@@ -143,7 +143,7 @@ _builtin.mixin
     # Must be an Object.
     # Because of IE, we also have to check the presence of the constructor property.
     # Make sure that DOM nodes and window objects don't pass through, as well
-    if not object or @type(object) isnt "object" or object.nodeType or @isWindow(object)
+    if not object or not @isObject(object) or object.nodeType or @isWindow(object)
       return false
 
     try
@@ -184,7 +184,7 @@ _builtin.mixin
 
     if not object? or not object
       result = true
-    else if @type(object) is "object"
+    else if @isObject(object)
       result = true
 
       for name of object
@@ -203,14 +203,14 @@ _builtin.mixin
   isArrayLike: ( object ) ->
     result = false
 
-    if @type(object) is "object" and object isnt null
+    if @isObject(object) and object isnt null
       if not @isWindow object
         type = @type object
         length = object.length
 
         result = true if object.nodeType is 1 and length or
-          type is "array" or
-          type isnt "function" and
+          @isArray(type) or
+          not @isFunction(type) and
           (length is 0 or @isNumber(length) and length > 0 and (length - 1) of object)
 
     return result
