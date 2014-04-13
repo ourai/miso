@@ -77,11 +77,11 @@ defineProp = function(target) {
 batch = function(handlers, data, host) {
   var methods;
   methods = storage.methods;
-  if (methods.isArray(data)) {
+  if (methods.isArray(data) || (methods.isPlainObject(data) && !methods.isArray(data.handlers))) {
     methods.each(data, function(d) {
       return batch(d != null ? d.handlers : void 0, d, host);
     });
-  } else if (methods.isObject(data)) {
+  } else if (methods.isPlainObject(data) && methods.isArray(data.handlers)) {
     methods.each(handlers, function(info) {
       return attach(info, data, host);
     });

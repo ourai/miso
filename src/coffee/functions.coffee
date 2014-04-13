@@ -46,10 +46,10 @@ defineProp = ( target ) ->
 batch = ( handlers, data, host ) ->
   methods = storage.methods
 
-  if methods.isArray data
+  if methods.isArray(data) or (methods.isPlainObject(data) and not methods.isArray(data.handlers))
     methods.each data, ( d ) ->
       batch d?.handlers, d, host
-  else if methods.isObject data
+  else if methods.isPlainObject(data) and methods.isArray(data.handlers)
     methods.each handlers, ( info ) ->
       attach info, data, host
 

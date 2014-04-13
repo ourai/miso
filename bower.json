@@ -1,7 +1,7 @@
 {
   "name": "miso",
   "version": "0.3.0",
-  "main": ["dest/miso.min.js", "dest/miso.min.css"],
+  "main": ["dest/miso.min.js"],
   "license": "MIT",
   "ignore": ["**/*", "!dest/**/*"],
   "keywords": [
