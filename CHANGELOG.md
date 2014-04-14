@@ -2,7 +2,8 @@
 
 ## 0.3.2 (2014-04-14)
 
-修复在 IE9- 浏览器中 `Object.defineProperty` 会抛异常
+1.  修复在 IE9- 浏览器中 `Object.defineProperty` 会抛异常
+2.  添加 `isElement` 方法来判断一个对象是否为 DOM
 
 ## 0.3.1 (2014-04-13)
 
