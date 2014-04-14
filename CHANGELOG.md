@@ -1,5 +1,9 @@
 # MISO CHANGELOG
 
+## 0.3.2 (2014-04-14)
+
+修复在 IE9- 浏览器中 `Object.defineProperty` 会抛异常
+
 ## 0.3.1 (2014-04-13)
 
 支持向「构造函数」内传入一个纯对象（Plain Object）作为数据来源
