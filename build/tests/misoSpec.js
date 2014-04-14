@@ -1,4 +1,4 @@
-(function( window, $, undefined ) {
+(function( window, $ ) {
 
 function each( obj, callback ) {
   var idx = 0;
@@ -23,11 +23,89 @@ function each( obj, callback ) {
 }
 
 describe("determine variable types", function() {
-  var vars = [[], document.links, window, "", {}, true, false, -1, 0, 1, 1.00000, 0.00001, "0"];
+  var vars = [
+      window, document.links, [], {}, {a:1, b:2},
+      undefined, null, true, false, "true",
+      "false", "", "0", "0.0000", "0.0001",
+      "00.0001", "0.0100", "00.0100", -1, 0,
+      1, 1.00000, 0.00001, function() {}, function() {alert(1)},
+      new Date(), /\^[a-z]/
+    ];
   var data = {
-    isBoolean: [false, false, false, false, false, true, true, false, false, false, false, false, false],
-    isArray: [true, false, false, false, false, false, false, false, false, false, false, false, false],
-    isArrayLike: [false, true, false, false, false, false, false, false, false, false, false, false, false]
+    // base types
+    isBoolean: [
+        false, false, false, false, false,
+        false, false, true, true, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false
+      ],
+    isNumber: [
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, true, true,
+        true, true, true, false, false,
+        false, false
+      ],
+    isString: [
+        false, false, false, false, false,
+        false, false, false, false, true,
+        true, true, true, true, true,
+        true, true, true, false, false,
+        false, false, false, false, false,
+        false, false
+      ],
+    isFunction: [
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, true, true,
+        false, false
+      ],
+    isArray: [
+        false, false, true, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false
+      ],
+    isDate: [
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        true, false
+      ],
+    isRegExp: [
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, true
+      ],
+    isObject: [
+        true, true, false, true, true,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false
+      ],
+    // extension types
+    isArrayLike: [
+        false, true, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false
+      ]
   };
 
   each(data, function( results, method ) {

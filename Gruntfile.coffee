@@ -68,6 +68,7 @@ module.exports = ( grunt ) ->
       test:
         src: "<%= meta.tests %>/<%= pkg.name %>.js"
         options:
+          version: "2.0.0"
           specs: "<%= meta.tests %>/*Spec.js"
 
   grunt.loadNpmTasks task for task in npmTasks
