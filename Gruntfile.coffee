@@ -9,6 +9,7 @@ module.exports = ( grunt ) ->
       "grunt-contrib-concat"
       "grunt-contrib-clean"
       "grunt-contrib-copy"
+      "grunt-contrib-jasmine"
     ]
 
   grunt.initConfig
@@ -63,6 +64,11 @@ module.exports = ( grunt ) ->
         cwd: "<%= meta.dest %>"
         src: ["**.js"]
         dest: "<%= meta.tests %>"
+    jasmine:
+      test:
+        src: "<%= meta.tests %>/<%= pkg.name %>.js"
+        options:
+          specs: "<%= meta.tests %>/*Spec.js"
 
   grunt.loadNpmTasks task for task in npmTasks
 
