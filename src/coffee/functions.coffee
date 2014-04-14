@@ -24,14 +24,12 @@ defineProp = ( target ) ->
   prop = "__#{LIB_CONFIG.name.toLowerCase()}__"
   value = true
 
-  if hasOwnProp Object, "defineProperty"
-    try
-      Object.defineProperty target, prop,
-        __proto__: null
-        value: value
-    catch error
-      target[prop] = value
-  else
+  # throw an exception in IE9-
+  try
+    Object.defineProperty target, prop,
+      __proto__: null
+      value: value
+  catch error
     target[prop] = value
 
   return true

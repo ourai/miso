@@ -117,6 +117,25 @@ describe("determine variable types", function() {
       });
     });
   });
+
+  it("whether a window object", function() {
+    expect($.isWindow(window)).toBe(true);
+    expect($.isWindow(document)).toBe(false);
+  });
+
+  it("whether a fake window object", function() {
+    expect($.isWindow({"setInterval": 1})).toBe(true);
+  });
+
+  it("whether a DOM object", function() {
+    expect($.isElement(window)).toBe(false);
+    expect($.isElement(document)).toBe(false);
+    expect($.isElement(document.body)).toBe(true);
+  });
+
+  it("whether a fake DOM object", function() {
+    expect($.isElement({"nodeType": 1})).toBe(true);
+  });
 });
 
 })(window, Miso);

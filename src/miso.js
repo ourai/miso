@@ -51,17 +51,13 @@ defineProp = function(target) {
   var error, prop, value;
   prop = "__" + (LIB_CONFIG.name.toLowerCase()) + "__";
   value = true;
-  if (hasOwnProp(Object, "defineProperty")) {
-    try {
-      Object.defineProperty(target, prop, {
-        __proto__: null,
-        value: value
-      });
-    } catch (_error) {
-      error = _error;
-      target[prop] = value;
-    }
-  } else {
+  try {
+    Object.defineProperty(target, prop, {
+      __proto__: null,
+      value: value
+    });
+  } catch (_error) {
+    error = _error;
     target[prop] = value;
   }
   return true;
@@ -245,10 +241,21 @@ storage.methods = {
    * 
    * @method  isWindow
    * @param   object {Mixed}
-   * @return  {String}
+   * @return  {Boolean}
    */
   isWindow: function(object) {
     return object && this.isObject(object) && "setInterval" in object;
+  },
+
+  /*
+   * 判断是否为 DOM 对象
+   * 
+   * @method  isElement
+   * @param   object {Mixed}
+   * @return  {Boolean}
+   */
+  isElement: function(object) {
+    return object && this.isObject(object) && object.nodeType === 1;
   },
 
   /*
