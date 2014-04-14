@@ -100,10 +100,20 @@ storage.methods =
   # 
   # @method  isWindow
   # @param   object {Mixed}
-  # @return  {String}
+  # @return  {Boolean}
   ###
   isWindow: ( object ) ->
     return object and @isObject(object) and "setInterval" of object
+
+  ###
+  # 判断是否为 DOM 对象
+  # 
+  # @method  isElement
+  # @param   object {Mixed}
+  # @return  {Boolean}
+  ###
+  isElement: ( object ) ->
+    return object and @isObject(object) and object.nodeType is 1
 
   ###
   # 判断是否为数字类型（字符串）
