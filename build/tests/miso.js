@@ -20,7 +20,7 @@ var LIB_CONFIG, attach, batch, defineProp, hasOwnProp, settings, storage, toStri
 
 LIB_CONFIG = {
   name: "Miso",
-  version: "0.3.1"
+  version: "0.3.2"
 };
 
 toString = {}.toString;
@@ -65,14 +65,19 @@ hasOwnProp = function(obj, prop) {
  */
 
 defineProp = function(target) {
-  var prop, value;
+  var error, prop, value;
   prop = "__" + (LIB_CONFIG.name.toLowerCase()) + "__";
   value = true;
   if (hasOwnProp(Object, "defineProperty")) {
-    Object.defineProperty(target, prop, {
-      __proto__: null,
-      value: value
-    });
+    try {
+      Object.defineProperty(target, prop, {
+        __proto__: null,
+        value: value
+      });
+    } catch (_error) {
+      error = _error;
+      target[prop] = value;
+    }
   } else {
     target[prop] = value;
   }

@@ -25,9 +25,12 @@ defineProp = ( target ) ->
   value = true
 
   if hasOwnProp Object, "defineProperty"
-    Object.defineProperty target, prop,
-      __proto__: null
-      value: value
+    try
+      Object.defineProperty target, prop,
+        __proto__: null
+        value: value
+    catch error
+      target[prop] = value
   else
     target[prop] = value
 
