@@ -73,7 +73,13 @@ attach = ( set, data, host ) ->
   if not methods.isFunction host[name]
     handler = set.handler
     value = if hasOwnProp(set, "value") then set.value else data.value
-    validators = [set.validator, data.validator, settings.validator, ->]
+    validators = [
+        set.validator
+        data.validator
+        settings.validator
+        ->
+          return true
+      ]
 
     break for validator in validators when methods.isFunction validator
 

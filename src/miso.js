@@ -109,7 +109,11 @@ attach = function(set, data, host) {
   if (!methods.isFunction(host[name])) {
     handler = set.handler;
     value = hasOwnProp(set, "value") ? set.value : data.value;
-    validators = [set.validator, data.validator, settings.validator, function() {}];
+    validators = [
+      set.validator, data.validator, settings.validator, function() {
+        return true;
+      }
+    ];
     for (_i = 0, _len = validators.length; _i < _len; _i++) {
       validator = validators[_i];
       if (methods.isFunction(validator)) {
