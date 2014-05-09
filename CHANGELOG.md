@@ -1,5 +1,9 @@
 # MISO CHANGELOG
 
+## 0.3.3 (2014-05-09)
+
+1.  `validator` 默认返回 `true`
+
 ## 0.3.2 (2014-04-14)
 
 1.  修复在 IE9- 浏览器中 `Object.defineProperty` 会抛异常
