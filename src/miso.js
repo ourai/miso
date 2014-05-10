@@ -9,7 +9,9 @@ LIB_CONFIG = {
 toString = {}.toString;
 
 settings = {
-  validator: function() {}
+  validator: function() {
+    return true;
+  }
 };
 
 storage = {

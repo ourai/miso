@@ -4,6 +4,7 @@ toString = {}.toString
 # default settings
 settings =
   validator: ->
+    return true
 
 # storage for internal usage
 storage =

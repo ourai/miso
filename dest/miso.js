@@ -20,13 +20,15 @@ var LIB_CONFIG, attach, batch, defineProp, hasOwnProp, settings, storage, toStri
 
 LIB_CONFIG = {
   name: "Miso",
-  version: "0.3.2"
+  version: "0.3.3"
 };
 
 toString = {}.toString;
 
 settings = {
-  validator: function() {}
+  validator: function() {
+    return true;
+  }
 };
 
 storage = {
