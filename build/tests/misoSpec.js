@@ -138,4 +138,41 @@ describe("determine variable types", function() {
   });
 });
 
+describe("whether an empty object", function() {
+  it("Null?", function() {
+    expect($.isEmpty(null)).toBe(true);
+    expect($.isEmpty("null")).toBe(false);
+  });
+
+  it("Undefined?", function() {
+    expect($.isEmpty(undefined)).toBe(true);
+    expect($.isEmpty("undefined")).toBe(false);
+  });
+
+  it("Empty Array-like object?", function() {
+    expect($.isEmpty(document.getElementsByTagName("main"))).toBe(true);
+    expect($.isEmpty(document.getElementsByTagName("body"))).toBe(false);
+  });
+
+  it("Empty Array?", function() {
+    expect($.isEmpty([])).toBe(true);
+    expect($.isEmpty([1, 2, 3])).toBe(false);
+  });
+
+  it("Empty object?", function() {
+    expect($.isEmpty({})).toBe(true);
+    expect($.isEmpty({a:123})).toBe(false);
+
+    var F = function() {};
+    var I = new F();
+    expect($.isEmpty(I)).toBe(true);
+
+    var G = function() {
+      this.type = "test";
+    };
+    var J = new G();
+    expect($.isEmpty(J)).toBe(false);
+  });
+});
+
 })(window, Miso);
