@@ -169,14 +169,9 @@ storage.methods =
   # A variable is considered empty if its value is or like:
   #  - null
   #  - undefined
-  #  - false
   #  - ""
   #  - []
   #  - {}
-  #  - 0
-  #  - 0.0
-  #  - "0"
-  #  - "0.0"
   #
   # @method  isEmpty
   # @param   object {Mixed}
@@ -187,8 +182,13 @@ storage.methods =
   isEmpty: ( object ) ->
     result = false
 
-    if not object? or not object
+    # null, undefined and ""
+    if not object? or object is ""
       result = true
+    # array and array-like object
+    else if (@isArray(object) or @isArrayLike(object)) and object.length is 0
+      result = true
+    # plain object
     else if @isObject(object)
       result = true
 

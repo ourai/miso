@@ -335,14 +335,9 @@ storage.methods = {
    * A variable is considered empty if its value is or like:
    *  - null
    *  - undefined
-   *  - false
    *  - ""
    *  - []
    *  - {}
-   *  - 0
-   *  - 0.0
-   *  - "0"
-   *  - "0.0"
    *
    * @method  isEmpty
    * @param   object {Mixed}
@@ -353,7 +348,9 @@ storage.methods = {
   isEmpty: function(object) {
     var name, result;
     result = false;
-    if ((object == null) || !object) {
+    if ((object == null) || object === "") {
+      result = true;
+    } else if ((this.isArray(object) || this.isArrayLike(object)) && object.length === 0) {
       result = true;
     } else if (this.isObject(object)) {
       result = true;
