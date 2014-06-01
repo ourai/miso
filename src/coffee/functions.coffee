@@ -70,7 +70,7 @@ attach = ( set, data, host ) ->
   name = set.name
   methods = storage.methods
 
-  if not methods.isFunction host[name]
+  if set.expose isnt false and not methods.isFunction host[name]
     handler = set.handler
     value = if hasOwnProp(set, "value") then set.value else data.value
     validators = [
