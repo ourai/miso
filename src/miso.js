@@ -108,7 +108,7 @@ attach = function(set, data, host) {
   var handler, method, methods, name, validator, validators, value, _i, _len;
   name = set.name;
   methods = storage.methods;
-  if (!methods.isFunction(host[name])) {
+  if (set.expose !== false && !methods.isFunction(host[name])) {
     handler = set.handler;
     value = hasOwnProp(set, "value") ? set.value : data.value;
     validators = [

@@ -20,7 +20,7 @@ var LIB_CONFIG, attach, batch, defineProp, hasOwnProp, settings, storage, toStri
 
 LIB_CONFIG = {
   name: "Miso",
-  version: "0.3.3"
+  version: "0.3.4"
 };
 
 toString = {}.toString;
@@ -125,7 +125,7 @@ attach = function(set, data, host) {
   var handler, method, methods, name, validator, validators, value, _i, _len;
   name = set.name;
   methods = storage.methods;
-  if (!methods.isFunction(host[name])) {
+  if (set.expose !== false && !methods.isFunction(host[name])) {
     handler = set.handler;
     value = hasOwnProp(set, "value") ? set.value : data.value;
     validators = [
