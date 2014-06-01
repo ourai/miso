@@ -1,6 +1,6 @@
 {
   "name": "miso",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Batch processing for a function's arguments and return value",
   "homepage": "http://ourai.github.io/miso/",
   "keywords": [
