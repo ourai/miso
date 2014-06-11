@@ -20,7 +20,7 @@ var LIB_CONFIG, attach, batch, defineProp, hasOwnProp, settings, storage, toStri
 
 LIB_CONFIG = {
   name: "Miso",
-  version: "0.3.4"
+  version: "0.3.5"
 };
 
 toString = {}.toString;
@@ -253,10 +253,12 @@ storage.methods = {
    * 判断某个对象是否有自己的指定属性
    *
    * @method   hasProp
+   * @param    prop {String}   Property to be tested
+   * @param    obj {Object}    Target object
    * @return   {Boolean}
    */
-  hasProp: function() {
-    return hasOwnProp.apply(this, this.slice(arguments));
+  hasProp: function(prop, obj) {
+    return hasOwnProp.apply(this, [(arguments.length < 2 ? window : obj), prop]);
   },
 
   /*
@@ -316,7 +318,7 @@ storage.methods = {
       return false;
     }
     try {
-      if (object.constructor && !this.hasProp(object, "constructor") && !this.hasProp(object.constructor.prototype, "isPrototypeOf")) {
+      if (object.constructor && !this.hasProp("constructor", object) && !this.hasProp("isPrototypeOf", object.constructor.prototype)) {
         return false;
       }
     } catch (_error) {
@@ -326,7 +328,7 @@ storage.methods = {
     for (key in object) {
       key;
     }
-    return key === void 0 || this.hasProp(object, key);
+    return key === void 0 || this.hasProp(key, object);
   },
 
   /*

@@ -86,10 +86,12 @@ storage.methods =
   # 判断某个对象是否有自己的指定属性
   #
   # @method   hasProp
+  # @param    prop {String}   Property to be tested
+  # @param    obj {Object}    Target object
   # @return   {Boolean}
   ###
-  hasProp: ->
-    return hasOwnProp.apply this, @slice arguments
+  hasProp: ( prop, obj ) ->
+    return hasOwnProp.apply this, [(if arguments.length < 2 then window else obj), prop]
 
   # ====================
   # Extension of detecting type of variables
@@ -153,7 +155,7 @@ storage.methods =
 
     try
       # Not own constructor property must be Object
-      if object.constructor and not @hasProp(object, "constructor") and not @hasProp(object.constructor.prototype, "isPrototypeOf")
+      if object.constructor and not @hasProp("constructor", object) and not @hasProp("isPrototypeOf", object.constructor.prototype)
         return false
     catch error
         # IE8,9 will throw exceptions on certain host objects
@@ -161,7 +163,7 @@ storage.methods =
 
     key for key of object
 
-    return key is undefined or @hasProp(object, key)
+    return key is undefined or @hasProp(key, object)
 
   ###
   # Determin whether a variable is considered to be empty.
