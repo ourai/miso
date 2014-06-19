@@ -41,25 +41,12 @@ storage.methods =
   # 遍历
   # 
   # @method  each
-  # @param   object {Object/Array/Function}
+  # @param   object {Object/Array/Array-Like/Function/String}
   # @param   callback {Function}
   # @return  {Mixed}
   ###
   each: ( object, callback ) ->
-    type = @type object
-
-    if type in ["object", "function"]
-      break for name, value of object when callback.apply(value, [value, name, object]) is false
-    else if type in ["array", "string"]
-      index = 0
-      
-      while index < object.length
-        ele = if type is "array" then object[index] else object.charAt index
-
-        if callback.apply(object[index], [ele, index++, object]) is false
-          break
-
-    return object;
+    return each (if @isArrayLike(object) then @slice(object) else object), callback;
 
   ###
   # 获取对象类型
@@ -229,7 +216,7 @@ storage.methods =
     return result
 
 # Fill the map object-types, and add methods to detect object-type.
-storage.methods.each "Boolean Number String Function Array Date RegExp Object".split(" "), ( name ) ->
+each "Boolean Number String Function Array Date RegExp Object".split(" "), ( name ) ->
   # populate the storage.types map
   storage.types["[object #{name}]"] = lc = name.toLowerCase()
 
@@ -240,6 +227,6 @@ storage.methods.each "Boolean Number String Function Array Date RegExp Object".s
 _H = ( data, host ) ->
   return batch data?.handlers, data, host ? {}
 
-storage.methods.each storage.methods, ( handler, name )->
+each storage.methods, ( handler, name )->
   defineProp handler
   _H[name] = handler

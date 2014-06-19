@@ -1,4 +1,29 @@
 ###
+# 遍历
+# 
+# @private
+# @method  each
+# @param   object {Object/Array/Array-Like/Function/String}
+# @param   callback {Function}
+# @return  {Mixed}
+###
+each = ( object, callback ) ->
+  type = storage.methods.type object
+
+  if type in ["object", "function"]
+    break for name, value of object when callback.apply(value, [value, name, object]) is false
+  else if type in ["array", "string"]
+    index = 0
+    
+    while index < object.length
+      ele = if type is "array" then object[index] else object.charAt index
+
+      if callback.apply(object[index], [ele, index++, object]) is false
+        break
+
+  return object
+
+###
 # 判断某个对象是否有自己的指定属性
 #
 # !!! 不能用 object.hasOwnProperty(prop) 这种方式，低版本 IE 不支持。
@@ -48,10 +73,10 @@ batch = ( handlers, data, host ) ->
   methods = storage.methods
 
   if methods.isArray(data) or (methods.isPlainObject(data) and not methods.isArray(data.handlers))
-    methods.each data, ( d ) ->
+    each data, ( d ) ->
       batch d?.handlers, d, host
   else if methods.isPlainObject(data) and methods.isArray(data.handlers)
-    methods.each handlers, ( info ) ->
+    each handlers, ( info ) ->
       attach info, data, host
 
   return host
