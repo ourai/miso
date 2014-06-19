@@ -1,5 +1,5 @@
 "use strict";
-var LIB_CONFIG, attach, batch, defineProp, hasOwnProp, settings, storage, toString, _H;
+var LIB_CONFIG, attach, batch, defineProp, each, hasOwnProp, settings, storage, toString, _H;
 
 LIB_CONFIG = {
   name: "@NAME",
@@ -16,6 +16,39 @@ settings = {
 
 storage = {
   types: {}
+};
+
+
+/*
+ * 遍历
+ * 
+ * @private
+ * @method  each
+ * @param   object {Object/Array/Array-Like/Function/String}
+ * @param   callback {Function}
+ * @return  {Mixed}
+ */
+
+each = function(object, callback) {
+  var ele, index, name, type, value;
+  type = storage.methods.type(object);
+  if (type === "object" || type === "function") {
+    for (name in object) {
+      value = object[name];
+      if (callback.apply(value, [value, name, object]) === false) {
+        break;
+      }
+    }
+  } else if (type === "array" || type === "string") {
+    index = 0;
+    while (index < object.length) {
+      ele = type === "array" ? object[index] : object.charAt(index);
+      if (callback.apply(object[index], [ele, index++, object]) === false) {
+        break;
+      }
+    }
+  }
+  return object;
 };
 
 
@@ -81,11 +114,11 @@ batch = function(handlers, data, host) {
   var methods;
   methods = storage.methods;
   if (methods.isArray(data) || (methods.isPlainObject(data) && !methods.isArray(data.handlers))) {
-    methods.each(data, function(d) {
+    each(data, function(d) {
       return batch(d != null ? d.handlers : void 0, d, host);
     });
   } else if (methods.isPlainObject(data) && methods.isArray(data.handlers)) {
-    methods.each(handlers, function(info) {
+    each(handlers, function(info) {
       return attach(info, data, host);
     });
   }
@@ -175,30 +208,12 @@ storage.methods = {
    * 遍历
    * 
    * @method  each
-   * @param   object {Object/Array/Function}
+   * @param   object {Object/Array/Array-Like/Function/String}
    * @param   callback {Function}
    * @return  {Mixed}
    */
   each: function(object, callback) {
-    var ele, index, name, type, value;
-    type = this.type(object);
-    if (type === "object" || type === "function") {
-      for (name in object) {
-        value = object[name];
-        if (callback.apply(value, [value, name, object]) === false) {
-          break;
-        }
-      }
-    } else if (type === "array" || type === "string") {
-      index = 0;
-      while (index < object.length) {
-        ele = type === "array" ? object[index] : object.charAt(index);
-        if (callback.apply(object[index], [ele, index++, object]) === false) {
-          break;
-        }
-      }
-    }
-    return object;
+    return each((this.isArrayLike(object) ? this.slice(object) : object), callback);
   },
 
   /*
@@ -350,6 +365,12 @@ storage.methods = {
   /*
    * 是否为类数组对象
    *
+   * 类数组对象（Array-Like Object）是指具备以下特征的对象：
+   * -
+   * 1. 不是数组（Array）
+   * 2. 有自动增长的 length 属性
+   * 3. 以从 0 开始的数字做属性名
+   *
    * @method  isArrayLike
    * @param   object {Mixed}
    * @return  {Boolean}
@@ -361,7 +382,7 @@ storage.methods = {
       if (!this.isWindow(object)) {
         type = this.type(object);
         length = object.length;
-        if (object.nodeType === 1 && length || this.isArray(type) || !this.isFunction(type) && (length === 0 || this.isNumber(length) && length > 0 && (length - 1) in object)) {
+        if (object.nodeType === 1 && length || !this.isArray(type) && !this.isFunction(type) && (length === 0 || this.isNumber(length) && length > 0 && (length - 1) in object)) {
           result = true;
         }
       }
@@ -370,7 +391,7 @@ storage.methods = {
   }
 };
 
-storage.methods.each("Boolean Number String Function Array Date RegExp Object".split(" "), function(name) {
+each("Boolean Number String Function Array Date RegExp Object".split(" "), function(name) {
   var lc;
   storage.types["[object " + name + "]"] = lc = name.toLowerCase();
   return storage.methods["is" + name] = function(target) {
@@ -382,7 +403,7 @@ _H = function(data, host) {
   return batch(data != null ? data.handlers : void 0, data, host != null ? host : {});
 };
 
-storage.methods.each(storage.methods, function(handler, name) {
+each(storage.methods, function(handler, name) {
   defineProp(handler);
   return _H[name] = handler;
 });
