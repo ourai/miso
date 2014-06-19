@@ -203,6 +203,12 @@ storage.methods =
   ###
   # 是否为类数组对象
   #
+  # 类数组对象（Array-Like Object）是指具备以下特征的对象：
+  # -
+  # 1. 不是数组（Array）
+  # 2. 有自动增长的 length 属性
+  # 3. 以从 0 开始的数字做属性名
+  #
   # @method  isArrayLike
   # @param   object {Mixed}
   # @return  {Boolean}
@@ -216,7 +222,7 @@ storage.methods =
         length = object.length
 
         result = true if object.nodeType is 1 and length or
-          @isArray(type) or
+          not @isArray(type) and
           not @isFunction(type) and
           (length is 0 or @isNumber(length) and length > 0 and (length - 1) of object)
 
