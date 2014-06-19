@@ -46,7 +46,15 @@ storage.methods =
   # @return  {Mixed}
   ###
   each: ( object, callback ) ->
-    return each (if @isArrayLike(object) then @slice(object) else object), callback;
+    if @isArray(object) or @isArrayLike(object) or @isString(object)
+      index = 0
+      while index < object.length
+        ele = if @isString(object) then object.charAt(index) else object[index]
+        break if callback.apply(ele, [ele, index++, object]) is false
+    else if @isObject(object) or @isFunction(object)
+      break for name, value of object when callback.apply(value, [value, name, object]) is false
+
+    return object
 
   ###
   # 获取对象类型
@@ -205,28 +213,20 @@ storage.methods =
 
     if @isObject(object) and object isnt null
       if not @isWindow object
-        type = @type object
         length = object.length
 
         result = true if object.nodeType is 1 and length or
-          not @isArray(type) and
-          not @isFunction(type) and
+          not @isArray(object) and
+          not @isFunction(object) and
           (length is 0 or @isNumber(length) and length > 0 and (length - 1) of object)
 
     return result
 
-# Fill the map object-types, and add methods to detect object-type.
-each "Boolean Number String Function Array Date RegExp Object".split(" "), ( name ) ->
-  # populate the storage.types map
-  storage.types["[object #{name}]"] = lc = name.toLowerCase()
-
-  # add methods such as isNumber/isBoolean/...
-  storage.methods["is#{name}"] = ( target ) ->
-    return @type(target) is lc
+objectTypes()
 
 _H = ( data, host ) ->
   return batch data?.handlers, data, host ? {}
 
-each storage.methods, ( handler, name )->
+storage.methods.each storage.methods, ( handler, name )->
   defineProp handler
   _H[name] = handler

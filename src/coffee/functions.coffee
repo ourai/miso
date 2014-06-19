@@ -1,27 +1,22 @@
 ###
-# 遍历
+# Fill the map object-types, and add methods to detect object-type.
 # 
 # @private
-# @method  each
-# @param   object {Object/Array/Array-Like/Function/String}
-# @param   callback {Function}
-# @return  {Mixed}
+# @method   objectTypes
+# @return   {Object}
 ###
-each = ( object, callback ) ->
-  type = storage.methods.type object
+objectTypes = ->
+  types = "Boolean Number String Function Array Date RegExp Object".split " "
 
-  if type in ["object", "function"]
-    break for name, value of object when callback.apply(value, [value, name, object]) is false
-  else if type in ["array", "string"]
-    index = 0
-    
-    while index < object.length
-      ele = if type is "array" then object[index] else object.charAt index
+  for type in types
+    do ( type ) ->
+      # populate the storage.types map
+      storage.types["[object #{type}]"] = lc = type.toLowerCase()
+      # add methods such as isNumber/isBoolean/...
+      storage.methods["is#{type}"] = ( target ) ->
+        return @type(target) is lc
 
-      if callback.apply(object[index], [ele, index++, object]) is false
-        break
-
-  return object
+  return storage.types
 
 ###
 # 判断某个对象是否有自己的指定属性
@@ -73,10 +68,10 @@ batch = ( handlers, data, host ) ->
   methods = storage.methods
 
   if methods.isArray(data) or (methods.isPlainObject(data) and not methods.isArray(data.handlers))
-    each data, ( d ) ->
+    methods.each data, ( d ) ->
       batch d?.handlers, d, host
   else if methods.isPlainObject(data) and methods.isArray(data.handlers)
-    each handlers, ( info ) ->
+    methods.each handlers, ( info ) ->
       attach info, data, host
 
   return host

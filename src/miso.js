@@ -1,5 +1,5 @@
 "use strict";
-var LIB_CONFIG, attach, batch, defineProp, each, hasOwnProp, settings, storage, toString, _H;
+var LIB_CONFIG, attach, batch, defineProp, hasOwnProp, objectTypes, settings, storage, toString, _H;
 
 LIB_CONFIG = {
   name: "@NAME",
@@ -20,35 +20,28 @@ storage = {
 
 
 /*
- * 遍历
+ * Fill the map object-types, and add methods to detect object-type.
  * 
  * @private
- * @method  each
- * @param   object {Object/Array/Array-Like/Function/String}
- * @param   callback {Function}
- * @return  {Mixed}
+ * @method   objectTypes
+ * @return   {Object}
  */
 
-each = function(object, callback) {
-  var ele, index, name, type, value;
-  type = storage.methods.type(object);
-  if (type === "object" || type === "function") {
-    for (name in object) {
-      value = object[name];
-      if (callback.apply(value, [value, name, object]) === false) {
-        break;
-      }
-    }
-  } else if (type === "array" || type === "string") {
-    index = 0;
-    while (index < object.length) {
-      ele = type === "array" ? object[index] : object.charAt(index);
-      if (callback.apply(object[index], [ele, index++, object]) === false) {
-        break;
-      }
-    }
+objectTypes = function() {
+  var type, types, _fn, _i, _len;
+  types = "Boolean Number String Function Array Date RegExp Object".split(" ");
+  _fn = function(type) {
+    var lc;
+    storage.types["[object " + type + "]"] = lc = type.toLowerCase();
+    return storage.methods["is" + type] = function(target) {
+      return this.type(target) === lc;
+    };
+  };
+  for (_i = 0, _len = types.length; _i < _len; _i++) {
+    type = types[_i];
+    _fn(type);
   }
-  return object;
+  return storage.types;
 };
 
 
@@ -114,11 +107,11 @@ batch = function(handlers, data, host) {
   var methods;
   methods = storage.methods;
   if (methods.isArray(data) || (methods.isPlainObject(data) && !methods.isArray(data.handlers))) {
-    each(data, function(d) {
+    methods.each(data, function(d) {
       return batch(d != null ? d.handlers : void 0, d, host);
     });
   } else if (methods.isPlainObject(data) && methods.isArray(data.handlers)) {
-    each(handlers, function(info) {
+    methods.each(handlers, function(info) {
       return attach(info, data, host);
     });
   }
@@ -213,7 +206,24 @@ storage.methods = {
    * @return  {Mixed}
    */
   each: function(object, callback) {
-    return each((this.isArrayLike(object) ? this.slice(object) : object), callback);
+    var ele, index, name, value;
+    if (this.isArray(object) || this.isArrayLike(object) || this.isString(object)) {
+      index = 0;
+      while (index < object.length) {
+        ele = this.isString(object) ? object.charAt(index) : object[index];
+        if (callback.apply(ele, [ele, index++, object]) === false) {
+          break;
+        }
+      }
+    } else if (this.isObject(object) || this.isFunction(object)) {
+      for (name in object) {
+        value = object[name];
+        if (callback.apply(value, [value, name, object]) === false) {
+          break;
+        }
+      }
+    }
+    return object;
   },
 
   /*
@@ -376,13 +386,12 @@ storage.methods = {
    * @return  {Boolean}
    */
   isArrayLike: function(object) {
-    var length, result, type;
+    var length, result;
     result = false;
     if (this.isObject(object) && object !== null) {
       if (!this.isWindow(object)) {
-        type = this.type(object);
         length = object.length;
-        if (object.nodeType === 1 && length || !this.isArray(type) && !this.isFunction(type) && (length === 0 || this.isNumber(length) && length > 0 && (length - 1) in object)) {
+        if (object.nodeType === 1 && length || !this.isArray(object) && !this.isFunction(object) && (length === 0 || this.isNumber(length) && length > 0 && (length - 1) in object)) {
           result = true;
         }
       }
@@ -391,19 +400,13 @@ storage.methods = {
   }
 };
 
-each("Boolean Number String Function Array Date RegExp Object".split(" "), function(name) {
-  var lc;
-  storage.types["[object " + name + "]"] = lc = name.toLowerCase();
-  return storage.methods["is" + name] = function(target) {
-    return this.type(target) === lc;
-  };
-});
+objectTypes();
 
 _H = function(data, host) {
   return batch(data != null ? data.handlers : void 0, data, host != null ? host : {});
 };
 
-each(storage.methods, function(handler, name) {
+storage.methods.each(storage.methods, function(handler, name) {
   defineProp(handler);
   return _H[name] = handler;
 });

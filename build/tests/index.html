@@ -3,4 +3,13 @@
   <meta charset="UTF-8">
   <title>Test</title>
   <script src="./miso.js"></script>
+  <script>
+    function test() {
+      Miso.each(arguments, function(v,p) {
+        document.writeln(v+","+p);
+      });
+    }
+
+    test(11,22,33,44);
+  </script>
 </html>
