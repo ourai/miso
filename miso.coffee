@@ -64,20 +64,21 @@ hasOwnProp = ( obj, prop ) ->
 #
 # @private
 # @method   defineProp
-# @param    target {Object}
+# @param    obj {Object}
+# @param    prop {String}
+# @param    value {Mixed}
+# @param    [writable] {Boolean}
 # @return   {Boolean}
 ###
-defineProp = ( target ) ->
-  prop = "__#{META.name.toLowerCase()}__"
-  value = true
-
+defineProp = ( obj, prop, value, writable = false ) ->
   # throw an exception in IE9-
   try
-    Object.defineProperty target, prop,
+    Object.defineProperty obj, prop,
       __proto__: null
+      writable: writable
       value: value
   catch error
-    target[prop] = value
+    obj[prop] = value
 
   return true
 
@@ -143,6 +144,17 @@ storage.methods =
   # ====================
 
   ###
+  # 扩充对象
+  # 
+  # @method   extend
+  # @param    data {Plain Object/Array}
+  # @param    [host] {Object}
+  # @return   {Object}
+  ###
+  extend: ( data, host ) ->
+    return @ data, host ? @
+
+  ###
   # 扩展指定对象
   # 
   # @method  mixin
@@ -168,7 +180,7 @@ storage.methods =
 
     # 只传一个参数时，扩展自身
     if length is 1
-      target = this
+      target = @
       i--
 
     while i < length
@@ -266,7 +278,50 @@ storage.methods =
   # @return   {Boolean}
   ###
   hasProp: ( prop, obj ) ->
-    return hasOwnProp.apply this, [(if arguments.length < 2 then this else obj), prop]
+    return hasOwnProp.apply @, [(if arguments.length < 2 then @ else obj), prop]
+
+  ###
+  # Returns the namespace specified and creates it if it doesn't exist.
+  # Be careful when naming packages.
+  # Reserved words may work in some browsers and not others.
+  #
+  # @method  namespace
+  # @param   [host] {Object}      Host object namespace will be added to
+  # @param   [ns_str_1] {String}     The first namespace string
+  # @param   [ns_str_2] {String}     The second namespace string
+  # @param   [ns_str_*] {String}     Numerous namespace string
+  # @param   [isGlobal] {Boolean}    Whether set window as the host object
+  # @return  {Object}                A reference to the last namespace object created
+  ###
+  namespace: ( host ) ->
+    args = arguments
+    ns = {}
+    
+    # 当 host 不是纯对象时
+    # 若最后一个参数是 true 则 host 是 window 对象
+    # 否则为 this
+    (host = if args[args.length - 1] is true then window else @) if not @isPlainObject host
+
+    @each args, ( arg ) =>
+      if @isString(arg) and /^[0-9A-Z_.]+[^_.]?$/i.test(arg)
+        obj = host
+
+        @each arg.split("."), ( part, idx, parts ) =>
+          if not obj?
+            return false
+
+          if not @hasProp part, obj
+            obj[part] = if idx is parts.length - 1 then null else {}
+
+          obj = obj[part]
+
+          return true
+
+        ns = obj
+
+      return true
+
+    return ns
 
   # ====================
   # Extension of detecting type of variables
@@ -401,13 +456,155 @@ storage.methods =
 
     return result
 
+  # ====================
+  # Library config
+  # ====================
+
+  ###
+  # 更改 META.name
+  # 
+  # @method   mask
+  # @param    guise {String}    New name for library
+  # @return   {Boolean}
+  ###
+  mask: ( guise ) ->
+    if @isString guise
+      if @hasProp guise, window
+        console.error "'#{guise}' has existed as a property of Window object." if window.console
+      else
+        lib_name = @__meta__.name
+        window[guise] = window[lib_name]
+
+        # IE9- 不能用 delete 关键字删除 window 的属性
+        try
+          result = delete window[lib_name]
+        catch error
+          window[lib_name] = undefined
+          result = true
+        
+        @__meta__.name = guise
+    else
+      result = false
+
+    return result
+
+  ###
+  # 别名
+  # 
+  # @method  alias
+  # @param   name {String}
+  # @return
+  ###
+  alias: ( name ) ->
+    # 通过 _alias 判断是否已经设置过别名
+    # 设置别名时要将原来的别名释放
+    # 如果设置别名了，是否将原名所占的空间清除？（需要征求别人意见）
+
+    window[name] = @ if @isString(name) and window[name] is undefined
+
+    return window[String(name)]
+
+class Environment
+  nav = navigator
+  ua = nav.userAgent.toLowerCase()
+
+  suffix =
+    windows:
+      "5.1": "XP"
+      "5.2": "XP x64 Edition"
+      "6.0": "Vista"
+      "6.1": "7"
+      "6.2": "8"
+      "6.3": "8.1"
+
+  platformName = ->
+    name = /^[\w.\/]+ \(([^;]+?)[;)]/.exec(ua)[1].split(" ").shift()
+    return if name is "compatible" then "windows" else name
+
+  platformVersion = ->
+    return (/windows nt ([\w.]+)/.exec(ua) or
+            /os ([\w]+) like mac/.exec(ua) or
+            /mac os(?: [a-z]*)? ([\w.]+)/.exec(ua) or
+            [])[1]?.replace /_/g, "."
+
+  detectPlatform = ->
+    platform =
+      touchable: false
+      version: platformVersion()
+    
+    platform[platformName()] = true
+
+    if platform.windows
+      platform.version = suffix.windows[platform.version]
+      platform.touchable = /trident[ \/][\w.]+; touch/.test ua
+    else if platform.ipod or platform.iphone or platform.ipad
+      platform.touchable = platform.ios = true
+
+    return platform
+
+  # jQuery 1.9.x 以下版本中 jQuery.browser 的实现方式
+  # IE 只能检测 IE11 以下
+  jQueryBrowser = ->
+    browser = {}
+    match = /(chrome)[ \/]([\w.]+)/.exec(ua) or
+            /(webkit)[ \/]([\w.]+)/.exec(ua) or
+            /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) or
+            /(msie) ([\w.]+)/.exec(ua) or
+            ua.indexOf("compatible") < 0 and /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) or
+            []
+    result =
+      browser: match[1] or ""
+      version: match[2] or "0"
+
+    if result.browser
+      browser[result.browser] = true
+      browser.version = result.version
+
+    if browser.chrome
+      browser.webkit = true
+    else if browser.webkit
+      browser.safari = true
+
+    return browser
+
+  detectBrowser = ->
+    # IE11 及以上
+    match = /trident.*? rv:([\w.]+)/.exec(ua)
+
+    if match
+      browser =
+        msie: true
+        version: match[1]
+    else
+      browser = jQueryBrowser()
+
+      if browser.mozilla
+        browser.firefox = true
+        match = /firefox[ \/]([\w.]+)/.exec(ua)
+        browser.version = match[1] if match
+
+    browser.language = nav.language or nav.browserLanguage
+
+    return browser
+     
+  constructor: ->
+    @platform = detectPlatform()
+    @browser = detectBrowser()
+
 objectTypes()
 
 LIB = ( data, host ) ->
   return batch data?.handlers, data, host ? {}
 
 storage.methods.each storage.methods, ( handler, name )->
-  defineProp handler
+  # defineProp handler, "__#{META.name.toLowerCase()}__", true
+
   LIB[name] = handler
+
+  return
+
+LIB.mixin new Environment
+
+defineProp LIB, "__meta__", META, true
 
 window[META.name] = LIB

@@ -29,6 +29,7 @@ module.exports = ( grunt ) ->
               "src/variables.coffee"
               "src/functions.coffee"
               "src/methods.coffee"
+              "src/Environment.coffee"
               "src/outro.coffee"
             ]
       js:

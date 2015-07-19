@@ -44,20 +44,21 @@ hasOwnProp = ( obj, prop ) ->
 #
 # @private
 # @method   defineProp
-# @param    target {Object}
+# @param    obj {Object}
+# @param    prop {String}
+# @param    value {Mixed}
+# @param    [writable] {Boolean}
 # @return   {Boolean}
 ###
-defineProp = ( target ) ->
-  prop = "__#{META.name.toLowerCase()}__"
-  value = true
-
+defineProp = ( obj, prop, value, writable = false ) ->
   # throw an exception in IE9-
   try
-    Object.defineProperty target, prop,
+    Object.defineProperty obj, prop,
       __proto__: null
+      writable: writable
       value: value
   catch error
-    target[prop] = value
+    obj[prop] = value
 
   return true
 

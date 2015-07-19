@@ -4,6 +4,17 @@ storage.methods =
   # ====================
 
   ###
+  # 扩充对象
+  # 
+  # @method   extend
+  # @param    data {Plain Object/Array}
+  # @param    [host] {Object}
+  # @return   {Object}
+  ###
+  extend: ( data, host ) ->
+    return @ data, host ? @
+
+  ###
   # 扩展指定对象
   # 
   # @method  mixin
@@ -29,7 +40,7 @@ storage.methods =
 
     # 只传一个参数时，扩展自身
     if length is 1
-      target = this
+      target = @
       i--
 
     while i < length
@@ -127,7 +138,50 @@ storage.methods =
   # @return   {Boolean}
   ###
   hasProp: ( prop, obj ) ->
-    return hasOwnProp.apply this, [(if arguments.length < 2 then this else obj), prop]
+    return hasOwnProp.apply @, [(if arguments.length < 2 then @ else obj), prop]
+
+  ###
+  # Returns the namespace specified and creates it if it doesn't exist.
+  # Be careful when naming packages.
+  # Reserved words may work in some browsers and not others.
+  #
+  # @method  namespace
+  # @param   [host] {Object}      Host object namespace will be added to
+  # @param   [ns_str_1] {String}     The first namespace string
+  # @param   [ns_str_2] {String}     The second namespace string
+  # @param   [ns_str_*] {String}     Numerous namespace string
+  # @param   [isGlobal] {Boolean}    Whether set window as the host object
+  # @return  {Object}                A reference to the last namespace object created
+  ###
+  namespace: ( host ) ->
+    args = arguments
+    ns = {}
+    
+    # 当 host 不是纯对象时
+    # 若最后一个参数是 true 则 host 是 window 对象
+    # 否则为 this
+    (host = if args[args.length - 1] is true then window else @) if not @isPlainObject host
+
+    @each args, ( arg ) =>
+      if @isString(arg) and /^[0-9A-Z_.]+[^_.]?$/i.test(arg)
+        obj = host
+
+        @each arg.split("."), ( part, idx, parts ) =>
+          if not obj?
+            return false
+
+          if not @hasProp part, obj
+            obj[part] = if idx is parts.length - 1 then null else {}
+
+          obj = obj[part]
+
+          return true
+
+        ns = obj
+
+      return true
+
+    return ns
 
   # ====================
   # Extension of detecting type of variables
@@ -262,11 +316,50 @@ storage.methods =
 
     return result
 
-objectTypes()
+  # ====================
+  # Library config
+  # ====================
 
-LIB = ( data, host ) ->
-  return batch data?.handlers, data, host ? {}
+  ###
+  # 更改 META.name
+  # 
+  # @method   mask
+  # @param    guise {String}    New name for library
+  # @return   {Boolean}
+  ###
+  mask: ( guise ) ->
+    if @isString guise
+      if @hasProp guise, window
+        console.error "'#{guise}' has existed as a property of Window object." if window.console
+      else
+        lib_name = @__meta__.name
+        window[guise] = window[lib_name]
 
-storage.methods.each storage.methods, ( handler, name )->
-  defineProp handler
-  LIB[name] = handler
+        # IE9- 不能用 delete 关键字删除 window 的属性
+        try
+          result = delete window[lib_name]
+        catch error
+          window[lib_name] = undefined
+          result = true
+        
+        @__meta__.name = guise
+    else
+      result = false
+
+    return result
+
+  ###
+  # 别名
+  # 
+  # @method  alias
+  # @param   name {String}
+  # @return
+  ###
+  alias: ( name ) ->
+    # 通过 _alias 判断是否已经设置过别名
+    # 设置别名时要将原来的别名释放
+    # 如果设置别名了，是否将原名所占的空间清除？（需要征求别人意见）
+
+    window[name] = @ if @isString(name) and window[name] is undefined
+
+    return window[String(name)]
