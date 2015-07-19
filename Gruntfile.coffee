@@ -13,72 +13,76 @@ module.exports = ( grunt ) ->
     ]
 
   grunt.initConfig
+    repo: info
     pkg: pkg
     meta:
-      src: "src"
-      coffee: "src/coffee"
-      dest: "dest"
-      build: "build"
-      tests: "<%= meta.build %>/tests"
-      tasks: "<%= meta.build %>/tasks"
+      temp: ".<%= pkg.name %>-cache"
     concat:
       coffee:
-        src: [
-            "<%= meta.coffee %>/intro.coffee"
-            "<%= meta.coffee %>/variables.coffee"
-            "<%= meta.coffee %>/functions.coffee"
-            "<%= meta.coffee %>/methods.coffee"
-            "<%= meta.coffee %>/outro.coffee"
-          ]
-        dest: "<%= meta.dest %>/<%= pkg.name %>.coffee"
-      js:
         options:
           process: ( src, filepath ) ->
             return src.replace /@(NAME|VERSION)/g, ( text, key ) ->
               return info[key.toLowerCase()]
-        src: [
-            "<%= meta.src %>/intro.js"
-            "<%= meta.src %>/<%= pkg.name %>.js"
-            "<%= meta.src %>/outro.js"
-          ]
-        dest: "<%= meta.dest %>/<%= pkg.name %>.js"
+        files:
+          "<%= pkg.name %>.coffee": [
+              "src/intro.coffee"
+              "src/variables.coffee"
+              "src/functions.coffee"
+              "src/methods.coffee"
+              "src/outro.coffee"
+            ]
+      js:
+        files:
+          "<%= meta.temp %>/<%= pkg.name %>-full.js": [
+              "build/intro.js"
+              "<%= meta.temp %>/<%= pkg.name %>.js"
+              "build/outro.js"
+            ]
     coffee:
       options:
         bare: true
         separator: "\x20"
-      build:
-        src: "<%= meta.dest %>/<%= pkg.name %>.coffee"
-        dest: "<%= meta.src %>/<%= pkg.name %>.js"
+      compile:
+        src: "<%= pkg.name %>.coffee"
+        dest: "<%= meta.temp %>/<%= pkg.name %>.js"
     uglify:
       options:
-        banner: "/*! <%= pkg.name %> <%= grunt.template.today('yyyy-mm-dd') %> */\n"
-      build:
-        src: "<%= meta.dest %>/<%= pkg.name %>.js"
-        dest: "<%= meta.dest %>/<%= pkg.name %>.min.js"
-    clean:
-      compiled:
-        src: ["dest/*.coffee"]
+        banner: "/*!\n" +
+                " * <%= repo.name %> v<%= repo.version %>\n" +
+                " * <%= pkg.homepage %>\n" +
+                " *\n" +
+                " * Copyright Ourai Lin, http://ourai.ws/\n" +
+                " *\n" +
+                " * Date: <%= grunt.template.today('yyyy-mm-dd') %>\n" +
+                " */\n"
+        sourceMap: false
+      compile:
+        src: "<%= meta.temp %>/<%= pkg.name %>-full.js"
+        dest: "<%= pkg.name %>.min.js"
     copy:
       test:
         expand: true
-        cwd: "<%= meta.dest %>"
+        cwd: "."
         src: ["**.js"]
-        dest: "<%= meta.tests %>"
+        dest: "test"
     jasmine:
       test:
-        src: "<%= meta.tests %>/<%= pkg.name %>.js"
+        src: "test/<%= pkg.name %>.min.js"
         options:
           version: "2.0.0"
-          specs: "<%= meta.tests %>/*Spec.js"
+          specs: "test/*Spec.js"
 
   grunt.loadNpmTasks task for task in npmTasks
 
   # Tasks about CoffeeScript
-  grunt.registerTask "compile_coffee", [
+  grunt.registerTask "compile", [
       "concat:coffee"
-      "coffee"
+      "coffee:compile"
       "concat:js"
-      "uglify"
+      "uglify:compile"
     ]
   # Default task
-  grunt.registerTask "default", ["compile_coffee", "clean", "copy"]
+  grunt.registerTask "default", [
+      "compile"
+      "copy"
+    ]

@@ -1,4 +1,2 @@
-# Directories
-node_modules/
-
-# Files
+/node_modules
+/.miso-cache

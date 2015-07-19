@@ -1,6 +1,6 @@
 "use strict"
 
 # Config of library
-LIB_CONFIG =
+META =
   name: "@NAME"
   version: "@VERSION"

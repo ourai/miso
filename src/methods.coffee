@@ -13,8 +13,19 @@ storage.methods =
   mixin: ->
     args = arguments
     length = args.length
-    target = args[0] ? {}
+    target = args[0] or {}
     i = 1
+    deep = false
+
+    # Handle a deep copy situation
+    if @type(target) is "boolean"
+      deep = target
+      target = args[1] or {}
+      # skip the boolean and the target
+      i = 2
+
+    # Handle case when target is a string or something (possible in deep copy)
+    target = {} if typeof target isnt "object" and not @isFunction target
 
     # 只传一个参数时，扩展自身
     if length is 1
@@ -24,13 +35,27 @@ storage.methods =
     while i < length
       opts = args[i]
 
-      if typeof opts is "object"
+      # Only deal with non-null/undefined values
+      if opts?
         for name, copy of opts
+          src = target[name]
+
           # 阻止无限循环
           if copy is target
             continue
 
-          if copy isnt undefined
+          # Recurse if we're merging plain objects or arrays
+          if deep and copy and (@isPlainObject(copy) or (copyIsArray = @isArray(copy)))
+            if copyIsArray
+              copyIsArray = false
+              clone = if src and @isArray(src) then src else []
+            else
+              clone = if src and @isPlainObject(src) then src else {}
+
+            # Never move original objects, clone them
+            target[name] = @mixin deep, clone, copy
+          # Don't bring in undefined values
+          else if copy isnt undefined
             target[name] = copy
 
       i++
@@ -64,18 +89,34 @@ storage.methods =
   # @return  {String}
   ###
   type: ( object ) ->
-    return if not object? then String(object) else storage.types[toString.call(object)] || "object"
+    if arguments.length is 0
+      result = null
+    else
+      result = if not object? then String(object) else storage.types[toString.call(object)] || "object"
+      
+    return result
 
   ###
   # 切割 Array-Like Object 片段
   #
   # @method   slice
-  # @param    args {Array-Like}
-  # @param    index {Integer}
+  # @param    target {Array-Like}
+  # @param    begin {Integer}
+  # @param    end {Integer}
   # @return
   ###
-  slice: ( args, index ) ->
-    return if not args? then [] else [].slice.call args, (Number(index) || 0)
+  slice: ( target, begin, end ) ->
+    if not target?
+      result = []
+    else
+      end = Number end
+      args = [(Number(begin) || 0)]
+
+      args.push(end) if arguments.length > 2 and not isNaN(end)
+
+      result = [].slice.apply target, args
+      
+    return  result
 
   ###
   # 判断某个对象是否有自己的指定属性
@@ -86,7 +127,7 @@ storage.methods =
   # @return   {Boolean}
   ###
   hasProp: ( prop, obj ) ->
-    return hasOwnProp.apply this, [(if arguments.length < 2 then window else obj), prop]
+    return hasOwnProp.apply this, [(if arguments.length < 2 then this else obj), prop]
 
   # ====================
   # Extension of detecting type of variables
@@ -120,7 +161,7 @@ storage.methods =
   # @return  {Boolean}
   ###
   isNumeric: ( object ) ->
-    return not isNaN(parseFloat(object)) and isFinite(object)
+    return not @isArray(object) and not isNaN(parseFloat(object)) and isFinite(object)
 
   ###
   # Determine whether a number is an integer.
@@ -211,22 +252,21 @@ storage.methods =
   isArrayLike: ( object ) ->
     result = false
 
-    if @isObject(object) and object isnt null
-      if not @isWindow object
-        length = object.length
+    if @isObject(object) and not @isWindow object
+      length = object.length
 
-        result = true if object.nodeType is 1 and length or
-          not @isArray(object) and
-          not @isFunction(object) and
-          (length is 0 or @isNumber(length) and length > 0 and (length - 1) of object)
+      result = true if object.nodeType is 1 and length or
+        not @isArray(object) and
+        not @isFunction(object) and
+        (length is 0 or @isNumber(length) and length > 0 and (length - 1) of object)
 
     return result
 
 objectTypes()
 
-_H = ( data, host ) ->
+LIB = ( data, host ) ->
   return batch data?.handlers, data, host ? {}
 
 storage.methods.each storage.methods, ( handler, name )->
   defineProp handler
-  _H[name] = handler
+  LIB[name] = handler

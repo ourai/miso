@@ -12,9 +12,16 @@ objectTypes = ->
     do ( type ) ->
       # populate the storage.types map
       storage.types["[object #{type}]"] = lc = type.toLowerCase()
+
+      if type is "Number"
+        handler = ( target ) ->
+          return if isNaN(target) then false else @type(target) is lc
+      else
+        handler = ( target ) ->
+          return @type(target) is lc
+
       # add methods such as isNumber/isBoolean/...
-      storage.methods["is#{type}"] = ( target ) ->
-        return @type(target) is lc
+      storage.methods["is#{type}"] = handler
 
   return storage.types
 
@@ -30,7 +37,7 @@ objectTypes = ->
 # @return   {Boolean}
 ###
 hasOwnProp = ( obj, prop ) ->
-  return if not obj? then false else Object.prototype.hasOwnProperty.call obj, prop
+  return if not obj? then false else Object::hasOwnProperty.call obj, prop
 
 ###
 # 为指定 object 或 function 定义属性
@@ -41,7 +48,7 @@ hasOwnProp = ( obj, prop ) ->
 # @return   {Boolean}
 ###
 defineProp = ( target ) ->
-  prop = "__#{LIB_CONFIG.name.toLowerCase()}__"
+  prop = "__#{META.name.toLowerCase()}__"
   value = true
 
   # throw an exception in IE9-
