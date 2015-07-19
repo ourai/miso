@@ -3,7 +3,7 @@
 # Config of library
 META =
   name: "Miso"
-  version: "0.3.5"
+  version: "0.4.1"
 
 # Save a reference to some core methods.
 toString = {}.toString

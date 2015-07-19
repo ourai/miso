@@ -1,4 +1,17 @@
-# MISO CHANGELOG
+# Changes
+
+## 0.4.1
+
+* 调整文件目录结构
+* 添加方法
+    * `extend`
+    * `namespace`
+    * `mask`
+    * `alias`
+* 添加属性
+    * `__meta__`
+    * `platform`
+    * `browser`
 
 ## 0.3.5 (2014-06-19)
 
